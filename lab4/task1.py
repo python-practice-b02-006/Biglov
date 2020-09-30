@@ -2,13 +2,13 @@
 
 import pygame
 import numpy as np
-from pygame.draw import *
+import pygame.draw as dr
 
 
 def draw_eye(x, y, size, inner_size):
-    circle(screen, (255, 0, 0), (x,y), size)
-    circle(screen, (0, 0, 0), (x,y), size, 1)
-    circle(screen, (0, 0, 0), (x,y), inner_size)
+    dr.circle(screen, (255, 0, 0), (x,y), size)
+    dr.circle(screen, (0, 0, 0), (x,y), size, 1)
+    dr.circle(screen, (0, 0, 0), (x,y), inner_size)
 
 def rotate(origin, point, angle):
     ox, oy = origin
@@ -38,16 +38,16 @@ FPS = 30
 screen = pygame.display.set_mode((400, 400))
 screen.fill((180,180,180))
 
-circle(screen, (255, 255, 0), (200,200), 100)
-circle(screen, (0, 0, 0), (200,200), 100, 1)
+dr.circle(screen, (255, 255, 0), (200,200), 100)
+dr.circle(screen, (0, 0, 0), (200,200), 100, 1)
 
-rect(screen, (0, 0, 0), (150, 250, 100, 20))
+dr.rect(screen, (0, 0, 0), (150, 250, 100, 20))
 
 draw_eye(150, 170, 25, 10)
 draw_eye(250, 170, 20, 10)
 
-polygon(screen, (0,0,0), rotate_rect((100, 130, 100, 10), np.pi/6))
-polygon(screen, (0,0,0), rotate_rect((210, 130, 100, 10), -np.pi/6))
+dr.polygon(screen, (0,0,0), rotate_rect((100, 130, 100, 10), np.pi/6))
+dr.polygon(screen, (0,0,0), rotate_rect((210, 130, 100, 10), -np.pi/6))
 
 pygame.display.update()
 clock = pygame.time.Clock()
