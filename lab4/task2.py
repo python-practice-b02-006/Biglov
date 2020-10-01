@@ -13,12 +13,28 @@ COLORS = {
     "water": (22, 80, 68),
     "black": (0, 0, 0),
     "sky": (0, 255, 255)
+
 }
 
 
 def bordered_ellipse(screen, color, rect, width):
     dr.ellipse(screen, color, rect)
     dr.ellipse(screen, COLORS["black"], rect, width)
+
+def draw_sun(screen):
+    width = screen.get_width()
+
+    srf = pygame.Surface((width//2, width//2))
+    srf.set_colorkey((0, 0, 0))
+
+    dr.ellipse(srf, (255, 255, 255), [0, 0, width//2, width//2], 20)
+    dr.ellipse(srf, (255, 255, 255), [width//4 - 20, width//4 - 20, 40, 40])
+    dr.rect(srf, (255, 255, 255), [width//4 - 5, 0, 10, width//2])
+    dr.rect(srf, (255, 255, 255), [0, width//4 - 5, width//2, 10])
+    
+    screen.blit(srf, (width//2, 0))
+
+
 
 def draw_background(screen):
     width, height = screen.get_width(), screen.get_height()
@@ -27,9 +43,11 @@ def draw_background(screen):
     dr.rect(screen, COLORS["grey"], [0, height//2, width, height//2])
     dr.line(screen, COLORS["black"], (0, height//2), (width, height//2))
 
+    draw_sun(screen)
+
 
 def draw_poodle(screen, x, y, scale):
-    w, h = 100*scale, 50*scale
+    w, h = int(100*scale), int(50*scale)
 
     rect1 = [x - w//2, y - h//2, w, h]
     bordered_ellipse(screen, COLORS["dark-grey"], rect1, 2)
@@ -127,6 +145,7 @@ FISH_IMG = pygame.image.load("fish.png")
 
 FPS = 30
 screen = pygame.display.set_mode((600, 900))
+
 
 draw_background(screen)
 
