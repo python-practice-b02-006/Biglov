@@ -15,14 +15,17 @@ COLORS = {
     "sky": (0, 255, 255)
 }
 
-
+pygame.init()
+FISH_IMG = pygame.image.load("fish.png")
 
 
 def bordered_ellipse(screen, color, rect, width):
+    """" draws ellipse with a black border """
     dr.ellipse(screen, color, rect)
     dr.ellipse(screen, COLORS["black"], rect, width)
 
 def draw_sun(screen):
+    """ draws sun """
     width = screen.get_width()
 
     srf = pygame.Surface((width//2, width//2))
@@ -38,6 +41,7 @@ def draw_sun(screen):
 
 
 def draw_background(screen):
+    """ draws background (land, sky and sun) """
     width, height = screen.get_width(), screen.get_height()
 
     screen.fill(COLORS["sky"])
@@ -49,6 +53,7 @@ def draw_background(screen):
 
 
 def draw_poodle(screen, x, y, scale):
+    """ draws a poodle at designated coordinates"""
     w, h = int(100*scale), int(50*scale)
 
     rect1 = [x - w//2, y - h//2, w, h]
@@ -62,6 +67,7 @@ def draw_poodle(screen, x, y, scale):
 
 
 def draw_bear_head(screen, x, y, scale):
+    """ draw a bear's head at designated coordinates"""
     w, h = 100*scale, 60*scale
     rect = [int(c) for c in [x - w//2, y - h//2, w, h]]
     
@@ -89,6 +95,7 @@ def draw_bear_head(screen, x, y, scale):
     dr.arc(screen, COLORS["black"], ear_rect2, 1.05*np.pi, 2*np.pi, 2)
 
 def draw_pole(screen, x, y, scale):
+    """ draws a fishing pole for the bear """
     segment_len = int(60*scale)
     segment_ang = [-np.pi/3, -np.pi/4, -np.pi/4 - 0.05, -np.pi/4 + 0.05, -np.pi/4]
     width = 6*scale
@@ -107,6 +114,7 @@ def draw_pole(screen, x, y, scale):
 
 
 def draw_bear(screen, x, y, scale):
+    """ draws a bear at designated coordinates """
     w, h = int(180*scale), int(300*scale)
     
     draw_bear_head(screen, x + w//4, y -6*h//11, scale)
@@ -127,6 +135,7 @@ def draw_bear(screen, x, y, scale):
     bordered_ellipse(screen, COLORS["grey"], [x + w//3, y - h//4, w//2, h//16], 2)
 
 def draw_fish(screen, x, y, ang, scale, mirror):
+    """ draw a fish at designated coordinates with given rotation"""
     srf = FISH_IMG.copy()
 
     srf = trans.rotate(srf, ang)
@@ -137,6 +146,7 @@ def draw_fish(screen, x, y, ang, scale, mirror):
     screen.blit(srf, (x, y))
 
 def draw_fishes(screen, x, y, scale):
+    """ draw fishes inside a scene at predefined coordinates"""
     dl = int(10*scale)
     coords = [
         ( 4, 5, 10, scale/3, False),
@@ -153,12 +163,14 @@ def draw_fishes(screen, x, y, scale):
         draw_fish(screen, x + dx*dl, y + dy*dl, ang, scl, mirr)
 
 def draw_scene(screen, x, y, scale):
+    """ draw bear with a plot, poodle and fishes"""
     draw_poodle(screen, x + 125*scale, y + 40*scale, 1.5*scale)
     draw_bear(screen, x - 180*scale, y, scale)
     draw_fishes(screen, x, y, scale)
 
-def get_scene_srf():
-    scene_srf = pygame.Surface((600, 900))
+def get_scene_srf(res_x, res_y):
+    """" draw a scene on a separate Surface """
+    scene_srf = pygame.Surface((res_x, res_y))
     scene_srf.set_colorkey((0, 255, 0))
     scene_srf.fill((0, 255, 0))
     draw_scene(scene_srf, scene_srf.get_width()//2, scene_srf.get_height()//2, 1)
@@ -166,7 +178,8 @@ def get_scene_srf():
     return scene_srf
 
 def draw_scenes(screen):
-    scene_srf = get_scene_srf()
+    """ draw several scenes at predefined coordinates """
+    scene_srf = get_scene_srf(600, 900)
 
     coords = [
         (100, 400, 0.4, True),
@@ -184,8 +197,6 @@ def draw_scenes(screen):
 
 
 
-pygame.init()
-FISH_IMG = pygame.image.load("fish.png")
 
 FPS = 30
 screen = pygame.display.set_mode((600, 900))
