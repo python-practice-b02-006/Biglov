@@ -119,13 +119,13 @@ def handle_click(event):
     global BALLS
     global TRIANGLES
     global MAX_RADIUS
-    hit = 0
+    score_delta = 0
     new_balls = []
     for i in range(len(BALLS)):
         if not ball_hit(i, event.pos):
             new_balls.append(BALLS[i])
         else:
-            hit += int(PENALTY*(MAX_RADIUS/BALLS[i][2]))
+            score_delta += int(PENALTY*(MAX_RADIUS/BALLS[i][2]))
             if(MAX_RADIUS > MIN_RADIUS):
                 MAX_RADIUS -= 1
     
@@ -134,17 +134,17 @@ def handle_click(event):
         if not triangle_hit(i, event.pos):
             new_triangles.append(TRIANGLES[i])
         else:
-            hit += int(2*PENALTY*(MAX_RADIUS/TRIANGLES[i][2]))
+            score_delta += int(2*PENALTY*(MAX_RADIUS/TRIANGLES[i][2]))
             if(MAX_RADIUS > MIN_RADIUS):
                 MAX_RADIUS -= 1
     
-
-    if(hit == 0):
-        hit = -PENALTY
+    point_delta = score_delta
+    if(point_delta == 0):
+        point_delta = -PENALTY
 
     BALLS = new_balls
     TRIANGLES = new_triangles
-    return hit
+    return score_delta, point_delta
 
 def handle_collision(x, max_x, sp_x, r):
     if(x-r < 0):
@@ -176,24 +176,27 @@ def update_balls():
     BALLS = new_balls
 
 QUIT_EVENT = False
-def game_loop(start_score, balls_number):
+def game_loop(start_points, balls_number):
     font = pygame.font.SysFont(None, 40)
-    score = start_score
+    points = start_points
+    score = 0
     clock = pygame.time.Clock()
     global QUIT_EVENT
 
     
     pygame.time.set_timer(pygame.NUMEVENTS-1, 1000)
-    while (not QUIT_EVENT) and (score > 0):
+    while (not QUIT_EVENT) and (points > 0):
         clock.tick(FPS)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 QUIT_EVENT = True
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                score += handle_click(event)
+                sd, pd = handle_click(event)
+                score += sd
+                points += pd
             elif event.type == pygame.NUMEVENTS-1:
-                score -= PENALTY
+                points -= PENALTY
                     
         refill_balls(balls_number//2)
         update_balls()
@@ -203,30 +206,74 @@ def game_loop(start_score, balls_number):
         update_triangles()
         draw_triangles()
 
-        img = font.render(str(score), True, BLUE)
+        img = font.render(str(points), True, BLUE)
         screen.blit(img, (20, 20))
 
         pygame.display.update()
         screen.fill(BLACK)
 
     pygame.time.set_timer(pygame.NUMEVENTS-1, 0)
+    return score
 
 
-font = pygame.font.SysFont(None, 100)
-game_over = False
+def do_game_over(t, score):
+    font = pygame.font.SysFont(None, 100)
+    img = font.render("GAME OVER", True, RED)
+    font = pygame.font.SysFont(None, 40)
+    img2 = font.render("SCORE: " + str(score), True, RED)
+    screen.blit(img , ((screen.get_width() - img.get_width())//2, (screen.get_height() - img.get_height())//2))
+    screen.blit(img2, ((screen.get_width() - img2.get_width())//2, (screen.get_height() - img2.get_height())//2 + img.get_height()))
+    pygame.display.update()
+    pygame.time.wait(t)
+
+LEADERBOARD = []
+def load_leaderboard(filename):
+    LEADERBOARD.clear()
+    with open(filename, 'r') as f:
+        for line in f:
+            LEADERBOARD.append(int(line))
+
+def save_leaderboard(filename):
+    with open(filename, 'w') as f:
+        for x in LEADERBOARD:
+            print(x, file=f)
+
+def update_leaderboard(score):
+    global LEADERBOARD
+    LEADERBOARD.append(score)
+    LEADERBOARD.sort(key=lambda x: -x)
+    LEADERBOARD = LEADERBOARD[0:10]
+
+def draw_leaderboard():
+    screen.fill(BLACK)
+    y = 20
+    
+    font = pygame.font.SysFont(None, 60)
+    title = font.render("SCOREBOARD", True, RED)
+    screen.blit(title, ((screen.get_width() - title.get_width())//2, y))
+    y += title.get_height()
+
+    font = pygame.font.SysFont(None, 40)
+    for x in LEADERBOARD:
+        img = font.render(str(x), True, RED)
+        screen.blit(img, ((screen.get_width() - img.get_width())//2, y))
+        y += img.get_height()
+
+
+
+load_leaderboard("scores.txt")
 while not QUIT_EVENT:
+    draw_leaderboard()
+    pygame.display.update()
     event = pygame.event.wait()
 
     if event.type == pygame.QUIT:
         QUIT_EVENT = True
     elif event.type == pygame.KEYDOWN:
         if event.key == pygame.K_SPACE:
-            game_loop(50, 20)
-            game_over = True
-    
-    if game_over:
-        img = font.render("GAME OVER", True, RED)
-        screen.blit(img, ((screen.get_width() - img.get_width())//2, (screen.get_height() - img.get_height())//2))
-        pygame.display.update()
+            score = game_loop(50, 20)
+            update_leaderboard(score)
+            do_game_over(2000, score)
     
 pygame.quit()
+save_leaderboard("scores.txt")
