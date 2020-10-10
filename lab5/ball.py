@@ -50,9 +50,74 @@ def ball_hit(idx, hit_pos):
     dx, dy = xp - x, yp - y
     return dx**2 + dy**2 < r**2
 
+TRIANGLES = []
+def add_triangle():
+    posx = rnd.randint(MAX_RADIUS, screen.get_width() - MAX_RADIUS) 
+    posy = rnd.randint(MAX_RADIUS, screen.get_height() - MAX_RADIUS)
+    
+    phi = 2*rnd.random()*np.pi
+    spd_mod = rnd.randint(200, 400)
+    spd = int(np.cos(phi)*spd_mod), int(np.sin(phi)*spd_mod)
+    
+    r = rnd.randint(MIN_RADIUS, MAX_RADIUS)
+    color = COLORS[rnd.randint(0, len(COLORS)-1)]
+    TRIANGLES.append(((posx, posy), spd, r, color))
+
+def refill_triangles(N):
+    while len(TRIANGLES) < N:
+        add_triangle()
+
+
+def draw_triangle(pos, size, color):
+    angles = [np.pi/2, np.pi + np.pi/6, -np.pi/6]
+    vertices = []
+    for a in angles:
+        vx = pos[0] + int(np.cos(a)*size)
+        vy = pos[1] + int(np.sin(a)*size)
+        vertices.append((vx, vy))
+    
+    polygon(screen, color, vertices)
+
+def draw_triangles():
+    for pos, _, r, color in TRIANGLES:
+        draw_triangle(pos, r, color)
+
+
+def update_triangles():
+    global TRIANGLES
+    F_koef = 1.5
+    
+    dt = 1/FPS
+    new_triangles = []
+    for pos, spd, r, color in TRIANGLES:
+        x, y = pos
+        sx, sy = spd
+        
+        x += int(sx*dt)
+        y += int(sy*dt)
+
+        sx += -sy*F_koef*dt
+        sy +=  sx*F_koef*dt
+
+        x, sx = handle_collision(x, screen.get_width(), sx, r)
+        y, sy = handle_collision(y, screen.get_height(), sy, r)
+
+        new_triangles.append(((x, y), (sx, sy), r, color))
+
+    TRIANGLES = new_triangles
+
+def triangle_hit(idx, hit_pos):
+    x, y = TRIANGLES[idx][0]
+    r = TRIANGLES[idx][2]
+    xp, yp = hit_pos
+
+    dx, dy = xp - x, yp - y
+    return dx**2 + dy**2 < r**2
+
 PENALTY = 20
 def handle_click(event):
     global BALLS
+    global TRIANGLES
     global MAX_RADIUS
     hit = 0
     new_balls = []
@@ -63,10 +128,22 @@ def handle_click(event):
             hit += int(PENALTY*(MAX_RADIUS/BALLS[i][2]))
             if(MAX_RADIUS > MIN_RADIUS):
                 MAX_RADIUS -= 1
+    
+    new_triangles = []
+    for i in range(len(TRIANGLES)):
+        if not triangle_hit(i, event.pos):
+            new_triangles.append(TRIANGLES[i])
+        else:
+            hit += int(2*PENALTY*(MAX_RADIUS/TRIANGLES[i][2]))
+            if(MAX_RADIUS > MIN_RADIUS):
+                MAX_RADIUS -= 1
+    
+
     if(hit == 0):
-        hit -= PENALTY
+        hit = -PENALTY
 
     BALLS = new_balls
+    TRIANGLES = new_triangles
     return hit
 
 def handle_collision(x, max_x, sp_x, r):
@@ -105,6 +182,7 @@ def game_loop(start_score, balls_number):
     clock = pygame.time.Clock()
     global QUIT_EVENT
 
+    
     pygame.time.set_timer(pygame.NUMEVENTS-1, 1000)
     while (not QUIT_EVENT) and (score > 0):
         clock.tick(FPS)
@@ -117,9 +195,13 @@ def game_loop(start_score, balls_number):
             elif event.type == pygame.NUMEVENTS-1:
                 score -= PENALTY
                     
-        refill_balls(balls_number)
+        refill_balls(balls_number//2)
         update_balls()
         draw_balls()
+
+        refill_triangles(balls_number//2)
+        update_triangles()
+        draw_triangles()
 
         img = font.render(str(score), True, BLUE)
         screen.blit(img, (20, 20))
@@ -127,10 +209,10 @@ def game_loop(start_score, balls_number):
         pygame.display.update()
         screen.fill(BLACK)
 
+    pygame.time.set_timer(pygame.NUMEVENTS-1, 0)
 
 
 font = pygame.font.SysFont(None, 100)
-pygame.time.set_timer(pygame.NUMEVENTS-1, 1000)
 game_over = False
 while not QUIT_EVENT:
     event = pygame.event.wait()
@@ -146,6 +228,5 @@ while not QUIT_EVENT:
         img = font.render("GAME OVER", True, RED)
         screen.blit(img, ((screen.get_width() - img.get_width())//2, (screen.get_height() - img.get_height())//2))
         pygame.display.update()
-    
     
 pygame.quit()
