@@ -96,6 +96,7 @@ class Target():
         self.coord = coord
         self.rad = rad
         self.color = color
+        self.is_alive = True
 
     def check_collision(self, ball):
         '''
@@ -103,31 +104,56 @@ class Target():
         '''
         R2 = sum([(x - y)**2 for x,y in zip(self.coord, ball.coord)])
 
-        return R2 < (self.rad + ball.rad)**2
+        if R2 < (self.rad + ball.rad)**2:
+            self.is_alive = False
+            return True
+        return False
 
-    def draw(self):
-        pg.draw.circle(screen, self.color, self.rad)
+    def draw(self, screen):
+        pg.draw.circle(screen, self.color, self.coord, self.rad)
     
 
 
 
 class Manager():
-    def __init__(self):
+    def __init__(self, target_count=3):
         self.gun = Gun()
         self.table = Table()
         self.balls = []
+        self.targets = []
+        self.target_count = target_count
+
+
+    def new_target(self):
+        '''
+        add a new target to shoot
+        '''
+        rad = randint(20, 30)
+
+        x = randint(rad, SCREEN_SIZE[0] - rad)
+        y = randint(rad, SCREEN_SIZE[1] - rad)
+
+        self.targets.append(Target([x, y], rad))
+
     
     def process(self, events, screen):
         done = self.handle_events(events)
         self.move()
         self.draw(screen)
-        self.check_alive()
+        if self.check_alive():
+            for i in range(self.target_count):
+                self.new_target()
+
         return done
 
     def draw(self, screen):
         screen.fill(BLACK)
         for ball in self.balls:
             ball.draw(screen)
+
+        for targ in self.targets:
+            targ.draw(screen)
+
         self.gun.draw(screen)
 
     def move(self):
@@ -136,13 +162,9 @@ class Manager():
         self.gun.move()
 
     def check_alive(self):
-        dead_balls = []
-        for i, ball in enumerate(self.balls):
-            if not ball.is_alive:
-                dead_balls.append(i)
-
-        for i in reversed(dead_balls):
-            self.balls.pop(i)
+        self.balls = [b for b in self.balls if b.is_alive]
+        self.targets = [t for t in self.targets if t.is_alive]
+        return len(self.targets) == 0
     
     def handle_events(self, events):
         done = False
