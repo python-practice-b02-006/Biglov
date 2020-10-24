@@ -5,6 +5,7 @@ import numpy as np
 from random import randint
 
 SCREEN_SIZE = (800, 600)
+WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 
@@ -55,7 +56,32 @@ class Ball():
 
 
 class Table():
-    pass
+    def __init__(self, font_sz=25):
+        self.shots = 0
+        self.hits = 0
+        self.font = pg.font.SysFont("dejavusansmono", font_sz)
+        self.margin = 5
+    
+    def score(self):
+        return self.hits - self.shots
+
+    def draw_line(self, screen, text, y, color):
+        '''
+        draws a line of text with margins returns y coordinate of the bottom
+        '''
+        surf = self.font.render(text, True, color)
+        screen.blit(surf, [self.margin, y + self.margin])
+
+        return y + surf.get_height() + 2*self.margin
+    
+    def draw(self):
+        y = 0
+        y = self.draw_line(screen, "Destroyed: " + str(self.hits), y, WHITE)
+        y = self.draw_line(screen, "Used: " + str(self.shots), y, WHITE)
+        self.draw_line(screen, "Total: " + str(self.score()), y, RED)
+
+
+
 
 
 class Gun():
@@ -163,6 +189,9 @@ class Manager():
         self.gun.move()
 
     def hits(self):
+        '''
+        check for collisions between targets and balls
+        '''
         for t in self.targets:
             for b in self.balls:
                 t.check_collision(b)
