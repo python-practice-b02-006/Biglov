@@ -67,14 +67,14 @@ class Table():
 
     def draw_line(self, screen, text, y, color):
         '''
-        draws a line of text with margins returns y coordinate of the bottom
+        draws a line of text with margins, returns y coordinate of the bottom
         '''
         surf = self.font.render(text, True, color)
         screen.blit(surf, [self.margin, y + self.margin])
 
         return y + surf.get_height() + 2*self.margin
     
-    def draw(self):
+    def draw(self, screen):
         y = 0
         y = self.draw_line(screen, "Destroyed: " + str(self.hits), y, WHITE)
         y = self.draw_line(screen, "Used: " + str(self.shots), y, WHITE)
@@ -168,7 +168,7 @@ class Manager():
         self.hits()
         self.draw(screen)
         if self.check_alive():
-            for i in range(self.target_count):
+            for _ in range(self.target_count):
                 self.new_target()
 
         return done
@@ -181,6 +181,7 @@ class Manager():
         for targ in self.targets:
             targ.draw(screen)
 
+        self.table.draw(screen)
         self.gun.draw(screen)
 
     def move(self):
@@ -194,7 +195,8 @@ class Manager():
         '''
         for t in self.targets:
             for b in self.balls:
-                t.check_collision(b)
+                if t.check_collision(b):
+                    self.table.hits += 1
 
 
     def check_alive(self):
@@ -218,6 +220,7 @@ class Manager():
             elif event.type == pg.MOUSEBUTTONUP:
                 if event.button == 1:
                     self.balls.append(self.gun.strike())
+                    self.table.shots += 1
         
         if pg.mouse.get_focused():
             mouse_pos = pg.mouse.get_pos()
