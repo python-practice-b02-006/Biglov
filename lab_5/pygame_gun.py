@@ -14,7 +14,7 @@ def choose_color():
     return (randint(0, 255), randint(0, 255), randint(0, 255))
 
 class Ball():
-    def __init__(self, coord, vel, rad=15, color=None):
+    def __init__(self, coord, vel, rad=20, color=None):
         if color == None:
             color = choose_color()
         self.color = color
@@ -60,7 +60,7 @@ class Table():
 
 class Gun():
     def __init__(self, coord=[30, SCREEN_SIZE[1]//2], 
-                 min_pow=10, max_pow=30):
+                 min_pow=10, max_pow=50):
         self.coord = coord
         self.angle = 0
         self.min_pow = min_pow
@@ -139,6 +139,7 @@ class Manager():
     def process(self, events, screen):
         done = self.handle_events(events)
         self.move()
+        self.hits()
         self.draw(screen)
         if self.check_alive():
             for i in range(self.target_count):
@@ -160,6 +161,12 @@ class Manager():
         for ball in self.balls:
             ball.move()
         self.gun.move()
+
+    def hits(self):
+        for t in self.targets:
+            for b in self.balls:
+                t.check_collision(b)
+
 
     def check_alive(self):
         self.balls = [b for b in self.balls if b.is_alive]
