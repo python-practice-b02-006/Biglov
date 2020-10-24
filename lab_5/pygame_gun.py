@@ -93,10 +93,20 @@ class Target():
         if color == None:
             color = choose_color()
 
-        self.pos = coord
+        self.coord = coord
         self.rad = rad
         self.color = color
 
+    def check_collision(self, ball):
+        '''
+        Checks if the given ball collides with the target
+        '''
+        R2 = sum([(x - y)**2 for x,y in zip(self.coord, ball.coord)])
+
+        return R2 < (self.rad + ball.rad)**2
+
+    def draw(self):
+        pg.draw.circle(screen, self.color, self.rad)
     
 
 
