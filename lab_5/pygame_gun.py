@@ -138,16 +138,26 @@ class Target():
     def draw(self, screen):
         pg.draw.circle(screen, self.color, self.coord, self.rad)
     
+class Obstacle:
+    def __init__(self, coord, len=30):
+        self.beg = coord[0], coord[1] - len//2
+        self.end = coord[0], coord[1] + len//2
+        self.len = len
 
+    def draw(self, screen):
+        pg.draw.line(screen, WHITE, self.beg, self.end)
+        
 
 
 class Manager():
-    def __init__(self, target_count=3):
+    def __init__(self, target_count=3, obstacle_count=1):
         self.gun = Gun()
         self.table = Table()
         self.balls = []
         self.targets = []
+        self.obstacles = []
         self.target_count = target_count
+        self.obstacle_count = obstacle_count
 
 
     def new_target(self):
@@ -156,12 +166,22 @@ class Manager():
         '''
         rad = randint(20, 30)
 
-        x = randint(rad, SCREEN_SIZE[0] - rad)
+        x = randint(SCREEN_SIZE[0]//2 + rad, SCREEN_SIZE[0] - rad)
         y = randint(rad, SCREEN_SIZE[1] - rad)
 
         self.targets.append(Target([x, y], rad))
 
-    
+    def new_obstacle(self):
+        '''
+        add a new obstacle
+        '''
+        o_len = 60
+        x = randint(SCREEN_SIZE[0]//4, 3*SCREEN_SIZE[0]//4)
+        y = randint(o_len//2, SCREEN_SIZE[1] - o_len//2)
+        
+        self.obstacles.append(Obstacle([x,y], o_len))
+
+
     def process(self, events, screen):
         done = self.handle_events(events)
         self.move()
@@ -170,16 +190,16 @@ class Manager():
         if self.check_alive():
             for _ in range(self.target_count):
                 self.new_target()
+            for _ in range(self.obstacle_count):
+                self.new_obstacle()
 
         return done
 
     def draw(self, screen):
         screen.fill(BLACK)
-        for ball in self.balls:
-            ball.draw(screen)
-
-        for targ in self.targets:
-            targ.draw(screen)
+        for obj_list in (self.balls, self.targets, self.obstacles):
+            for obj in obj_list:
+                obj.draw(screen)
 
         self.table.draw(screen)
         self.gun.draw(screen)
