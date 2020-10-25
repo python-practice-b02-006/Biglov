@@ -86,7 +86,7 @@ class Table():
 
 class Gun():
     def __init__(self, coord=[30, SCREEN_SIZE[1]//2], 
-                 min_pow=10, max_pow=50):
+                 min_pow=10, max_pow=60):
         self.coord = coord
         self.angle = 0
         self.min_pow = min_pow
