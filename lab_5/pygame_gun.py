@@ -139,14 +139,26 @@ class Target():
         pg.draw.circle(screen, self.color, self.coord, self.rad)
     
 class Obstacle:
-    def __init__(self, coord, len=30):
-        self.beg = coord[0], coord[1] - len//2
-        self.end = coord[0], coord[1] + len//2
-        self.len = len
+    def __init__(self, coord, height=30):
+        self.coord = coord
+        self.beg = coord[0], coord[1] - height//2
+        self.end = coord[0], coord[1] + height//2
+        self.height = height
+
+        self.is_alive = True
 
     def draw(self, screen):
         pg.draw.line(screen, WHITE, self.beg, self.end)
         
+    def check_collision(self, ball):
+        dx = self.coord[0] - ball.coord[0]
+        dy = self.coord[1] - ball.coord[1]
+        if np.abs(dx) < ball.rad and np.abs(dy) < self.height//2:
+            ball.coord[0] += np.sign(ball.vel[0])*(dx - ball.rad)
+            ball.vel[0] *= -1
+
+            self.is_alive = False
+
 
 
 class Manager():
@@ -207,6 +219,8 @@ class Manager():
     def move(self):
         for ball in self.balls:
             ball.move()
+            for obs in self.obstacles:
+                obs.check_collision(ball)
         self.gun.move()
 
     def hits(self):
@@ -222,6 +236,7 @@ class Manager():
     def check_alive(self):
         self.balls = [b for b in self.balls if b.is_alive]
         self.targets = [t for t in self.targets if t.is_alive]
+        self.obstacles = [o for o in self.obstacles if o.is_alive]
         return len(self.targets) == 0
     
     def handle_events(self, events):
