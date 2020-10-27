@@ -11,6 +11,16 @@ RED = (255, 0, 0)
 
 pg.init()
 
+def trunc_value(x, a, b):
+    '''
+    if x is inside [a,b] segment, returns x, otherwise return the closest end of segment
+    '''
+    if a <= x and x <= b:
+        return x
+    if x < a:
+        return a
+    return b
+
 def choose_color():
     return (randint(0, 255), randint(0, 255), randint(0, 255))
 
@@ -153,9 +163,15 @@ class Obstacle:
     def check_collision(self, ball):
         dx = self.coord[0] - ball.coord[0]
         dy = self.coord[1] - ball.coord[1]
-        if np.abs(dx) < ball.rad and np.abs(dy) < self.height//2:
-            ball.coord[0] += np.sign(ball.vel[0])*(dx - ball.rad)
-            ball.vel[0] *= -1
+        if np.abs(dx) < ball.rad and np.abs(dy) < self.height//2 + ball.rad:
+            sgn = np.sign(ball.vel[0])
+            if sgn == 0:
+                sgn = 1
+            ball.coord[0] += sgn*(dx - ball.rad)
+            
+            ax_x = ball.coord[0] - self.coord[0]
+            ax_y = ball.coord[1] - trunc_value(ball.coord[1], self.beg[1], self.end[1])
+            ball.flip_vel([ax_x, ax_y])
 
             self.is_alive = False
 
